@@ -1,12 +1,14 @@
 package models;
 
 import models.datastructures.DataScores;
+import models.datastructures.DataWords;
 
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * A class for interacting with and querying a database.
@@ -14,16 +16,22 @@ import java.util.List;
 public class Database {
     private Connection connection = null;
     private final String databaseUrl;
+    private String databaseFile;
     private final Model model;
+    private List<String> missedLetters = new ArrayList<>();
+    private int timeSeconds;
 
     /**
      * A database constructor that is always invoked when an object is created.     *
+     *
      * @param model Model
      */
     public Database(Model model) {
         this.model = model;
         this.databaseUrl = "jdbc:sqlite:" + model.getDatabaseFile();
         this.selectUniqueCategories(); // ComboBox needs categories from the table
+        this.databaseFile = this.databaseFile;
+        this.selectScores(); // Leaderboard needs data from the table
     }
 
     /**
@@ -88,4 +96,45 @@ public class Database {
             throw new RuntimeException(e);
         }
     }
+    public void wordsSelect (){
+        String sql = "SELECT * FROM words ORDER BY category, word";
+        List<String> categories = new ArrayList<>();
+        List<DataWords> dataWords = new ArrayList<>();
+        try {
+            Connection conn = this.dbConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            while(rs.next()) {
+                int id = rs.getInt("id");
+                String word = rs.getString("word");
+                String category = rs.getString("category");
+                dataWords.add(new DataWords(id, word, category));
+                categories.add(category);  // add category to array list
+            }
+            // https://howtodoinjava.com/java8/stream-find-remove-duplicates/
+            List<String> unique = categories.stream().distinct().collect(Collectors.toList());
+            model.setDataWords(dataWords);
+            model.setCorrectCmbNames(unique);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+
+    public void checkDatabaseConnection() {
+        try {
+            Connection conn = this.dbConnection();
+            if (conn != null) {
+                System.out.println("Ühendus andmebaasiga on edukas!");
+                conn.close();
+            } else {
+                System.out.println("Andmebaasiga ühenduse loomine ebaõnnestus!");
+            }
+        } catch (SQLException e) {
+            System.out.println("Andmebaasiga ühenduse loomine ebaõnnestus! Viga: " + e.getMessage());
+        }
+    }
 }
+
+

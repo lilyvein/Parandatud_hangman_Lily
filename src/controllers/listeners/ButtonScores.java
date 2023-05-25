@@ -29,6 +29,9 @@ public class ButtonScores implements ActionListener {
         createDialog(); // Create a window with a table header but no content
     }
 
+    /**
+     * Teeb dialog-i akna ja paneb tabeli sinna. Kuna seda on vaja korduvalt kasutada,
+     */
     private void createDialog() {
         dialogScore = new JDialog();
         dialogScore.setPreferredSize(new Dimension(530,180));

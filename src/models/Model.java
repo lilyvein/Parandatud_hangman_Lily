@@ -1,10 +1,18 @@
 package models;
 
 import models.datastructures.DataScores;
+import models.datastructures.DataWords;
 
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 /**
  * A model where the entire logic of the game must take place
@@ -15,7 +23,7 @@ public class Model {
     hangman_words_en.db - English words, the leaderboard table is empty
     hangman_words_ee_test.db - Estonian words, the leaderboard table is NOT empty
      */
-    private final String databaseFile = "hangman_words_ee_test.db"; // Default database
+    private String databaseFile = "hangman_words_ee.db"; // Default database
     private final String imagesFolder = "images"; // Hangman game images location
     private List<String> imageFiles = new ArrayList<>(); // All images with full folder path
     private String[] cmbNames; // ComboBox categories names (contents)
@@ -24,13 +32,34 @@ public class Model {
     private List<DataScores> dataScores = new ArrayList<>(); // The contents of the entire database table scores
     private int imageId = 0; // Current image id (0..11)
     private String selectedCategory = chooseCategory; // Default all categories as "All categories"
+    private List<String> missedLetters = new ArrayList<>();
+
+    public int countMissedWords;
+    private String playerName;
+    private List<DataWords> dataWords;
+    private String[] categories;
+    private String wordToGuess;
+    private StringBuilder wordNewOfLife;
+    private Connection connection = null;
+    private String dbUrl = "jdbc:sqlite:" + databaseFile;
+    private DataScores model;
+    int timeSeconds;
+    //private List<Character> userWord;
 
     /**
      * During the creation of the model, the names of the categories to be shown in the combobox are known
      */
     public Model() {
         new Database(this);
+        dataWords = new ArrayList<>();
+        wordNewOfLife = new StringBuilder(); // Initialize wordNewOfLife here
+        wordsSelect();
+
+
     }
+
+
+
 
     /**
      * Sets the content to match the ComboBox. Adds "All categories" and unique categories obtained from the database.
@@ -45,6 +74,61 @@ public class Model {
             x++;
         }
     }
+    public void randomWordsFromCategoriesList (String selectedCategory){
+        Random random = new Random();
+        //System.out.println("For a test to see current category: " + selectedCategory);
+        List<String> guessWordsToList = new ArrayList<>();
+        if (selectedCategory.equals("Kõik kategooriad")){
+            wordToGuess = dataWords.get(random.nextInt(dataWords.size())).getWord();
+            //System.out.println("Test for random word: " + wordToGuess.toUpperCase());
+        } else {
+            for (DataWords word : dataWords){
+                if (selectedCategory.equals(word.getCategory())) {
+                    guessWordsToList.add(word.getWord());
+
+                }
+            }
+            wordToGuess = guessWordsToList.get(random.nextInt(guessWordsToList.size()));
+            System.out.println("Test for random word from current category: " + wordToGuess.toUpperCase());
+        }
+        this.wordToGuess = wordToGuess.toUpperCase();
+        hideLetters();
+    }
+    private void hideLetters() {
+        wordNewOfLife = new StringBuilder();
+        for (int i = 0; i < wordToGuess.length(); i++) {
+            wordNewOfLife.append('_');
+        }
+        System.out.println("Test to see is word hidden: " + wordNewOfLife);
+    }
+
+
+
+    public void wordsSelect() {
+        String sql = "SELECT * FROM words ORDER BY category, word";
+        List<String> categories = new ArrayList<>(); // NB! See on meetodi sisene muutuja categories!
+        try {
+            Connection conn = this.dbConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            dataWords.clear(); // Tühjenda dataScores list vanadest andmetest
+            while (rs.next()) {
+                //int id = rs.getInt("id");
+                int id = rs.getInt("id");
+                String word = rs.getString("word");
+                String category = rs.getString("category");
+                dataWords.add(new DataWords(id, word, category)); // Lisame tabeli kirje dataWords listi
+                categories.add(category);
+            }
+            // https://howtodoinjava.com/java8/stream-find-remove-duplicates/
+            List<String> unique = categories.stream().distinct().collect(Collectors.toList());
+            setCorrectCmbNames(unique); // Unikaalsed nimed Listist String[] listi categories
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     /**
      * All ComboBox contents
@@ -149,4 +233,97 @@ public class Model {
     public void setSelectedCategory(String selectedCategory) {
         this.selectedCategory = selectedCategory;
     }
+    public List<String> getMissedLetters(){
+        return missedLetters;
+    }
+
+    public void setMissedLetters(List<String> missedLetters) {
+        this.missedLetters = missedLetters;
+    }
+
+
+
+
+
+    public void askPlayerName() {
+        playerName = JOptionPane.showInputDialog("Sisesta oma nimi");
+        if (playerName.length() < 2) {
+            askPlayerName();
+        }
+    }
+
+
+
+    public String addSpaceBetween(String word) {
+        String[] wordListOfList= word.split("");
+        StringJoiner joiner = new StringJoiner(" ");
+        for (String words : wordListOfList){
+            joiner.add(words);
+        }
+        return joiner.toString();
+    }
+    public String getWordToGuess() {return wordToGuess;}
+    public String[] getCategories() {return categories;}
+    public List<DataWords> setDataWords(List<DataWords> dataWords) {return dataWords;
+    }
+    private Connection dbConnection() throws SQLException {
+        if(connection != null) {  // ühendus on olemas
+            connection.close();
+        }
+        connection = DriverManager.getConnection(dbUrl);
+        return connection;
+    }
+
+    public StringBuilder getWordNewOfLife() {
+        return wordNewOfLife;
+    }
+
+
+    public String getPlayerName() {return playerName;
+    }
+
+    //public int getTimeSeconds() {return TimeSeconds();}
+    public void insertScoreToTable (){
+        /**
+         * TO-DO example is here https://alvinalexander.com/java/java-mysql-insert-example-preparedstatement/
+         * TO-DO example to format dates https://stackoverflow.com/questions/64759668/what-is-the-correct-datetimeformatter-pattern-for-datetimeoffset-column#:~:text=You%20need%20to%20use%20the,SSSSSS%20xxx%20.
+         */
+
+        String sql = "INSERT INTO scores (playertime, playername, guessword, wrongcharacters) VALUES (?, ?, ?, ?)";
+        String removeBrackets = getMissedLetters().toString().replace("[", "").replace("]", "");
+        DataScores endTime = new DataScores(LocalDateTime.now(), getPlayerName(), getWordToGuess(), removeBrackets, timeSeconds);
+
+        try {
+            Connection conn = this.dbConnection();
+            PreparedStatement preparedStmt = conn.prepareStatement(sql);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String playerTime = endTime.getGameTime().format(formatter);
+            preparedStmt.setString(1, playerTime);
+            preparedStmt.setString(2, endTime.getPlayerName());
+            preparedStmt.setString(3, endTime.getGuessWord());
+            preparedStmt.setString(4, endTime.getMissingLetters());
+            preparedStmt.setInt(5, endTime.getTimeSeconds());
+            preparedStmt.executeUpdate();
+            selectScores();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+
+    private void selectScores() {return;}
+
+    public int getCountMissedWords() {
+        return countMissedWords;
+
+
+    }
+
+    public void setCountMissedWords(int countMissedWords) {
+        this.countMissedWords = countMissedWords;
+    }
+
+    //private char[] getTimeSeconds() {return null;}
+
 }

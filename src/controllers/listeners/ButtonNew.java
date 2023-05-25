@@ -26,6 +26,7 @@ public class ButtonNew implements ActionListener {
      */
     @Override
     public void actionPerformed(ActionEvent e) {
+        view.setStartGame(); // Set the game to start
         view.hideNewButtons(); // Set access to buttons and text field
         view.getRealDateTime().stop(); // "Stop" real time
         if(!view.getGameTime().isRunning()) { // If gameTime not running
@@ -39,5 +40,10 @@ public class ButtonNew implements ActionListener {
         }
         view.setNewImage(0);
         view.getTxtChar().requestFocus(); // After pressing New Game, the input box becomes active
+        String selectedCategory = view.getCmbCategory().getSelectedItem().toString();  // Võtab kategooria, mida kasutaja valis
+        model.randomWordsFromCategoriesList(selectedCategory);  // Valib sõna kategooriast
+        String wordOfNew = model.addSpaceBetween(String.valueOf(model.getWordNewOfLife())); // Lisab sõna vahele tühikud
+        view.getLblResult().setText(wordOfNew); // Paneb sõna lblResultisse
+
     }
 }

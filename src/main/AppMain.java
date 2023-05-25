@@ -15,7 +15,7 @@ public class AppMain {
      * A method that creates the necessary objects for playing. This means model, GUI, etc.
      */
     private static void start() {
-        Model model = new Model(); // Create Model with databaseFile from command line
+        Model model = new Model(); // Create Model
         // Creates the main window and all the necessary panels after that with the labels and text fields of the
         // buttons there
         View view = new View(model);

@@ -198,5 +198,10 @@ public class GameBoard extends JPanel {
     public GameImages getGameImages() {
         return gameImages;
     }
+    /**
+     * Tagastab JLabeli mis sisaldab vigade ingot
+     * @return JLabel
+     */
+    public JLabel getLblError() {return lblError;}
 
 }
