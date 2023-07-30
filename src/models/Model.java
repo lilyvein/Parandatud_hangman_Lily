@@ -1,5 +1,6 @@
 package models;
 
+import helpers.GameTimer;
 import models.datastructures.DataScores;
 import models.datastructures.DataWords;
 
@@ -39,11 +40,12 @@ public class Model {
     private List<DataWords> dataWords;
     private String[] categories;
     private String wordToGuess;
-    private StringBuilder wordNewOfLife;
+    private StringBuilder hiddenWord;
     private Connection connection = null;
     private String dbUrl = "jdbc:sqlite:" + databaseFile;
     private DataScores model;
     int timeSeconds;
+    int PplayedTimeSeconds;
     //private List<Character> userWord;
 
     /**
@@ -52,7 +54,7 @@ public class Model {
     public Model() {
         new Database(this);
         dataWords = new ArrayList<>();
-        wordNewOfLife = new StringBuilder(); // Initialize wordNewOfLife here
+        hiddenWord = new StringBuilder(); // Initialize wordNewOfLife here
         wordsSelect();
     }
 
@@ -90,11 +92,11 @@ public class Model {
         hideLetters();
     }
     private void hideLetters() {
-        wordNewOfLife = new StringBuilder();
+        hiddenWord = new StringBuilder();
         for (int i = 0; i < wordToGuess.length(); i++) {
-            wordNewOfLife.append('_');
+            hiddenWord.append('_');
         }
-        System.out.println("Test to see is word hidden: " + wordNewOfLife);
+        System.out.println("Test to see is word hidden: " + hiddenWord);
     }
 
     /**
@@ -271,8 +273,8 @@ public class Model {
         return connection;
     }
 
-    public StringBuilder getWordNewOfLife() {
-        return wordNewOfLife;
+    public StringBuilder getHiddenWord() {
+        return hiddenWord;
     }
 
 
@@ -299,7 +301,8 @@ public class Model {
             preparedStmt.setString(2, endTime.getPlayerName());
             preparedStmt.setString(3, endTime.getGuessWord());
             preparedStmt.setString(4, endTime.getMissingLetters());
-            preparedStmt.setInt(5, endTime.getTimeSeconds());
+            //preparedStmt.setInt(5, endTime.getTimeSeconds());
+            //preparedStmt.setString(5, String.valueOf(endTime.getGameTime()));
             preparedStmt.executeUpdate();
             selectScores();
         } catch (SQLException e) {

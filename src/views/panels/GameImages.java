@@ -49,6 +49,21 @@ public class GameImages extends JPanel {
     }
 
     /**
+     *
+     * @return
+     */
+    public JLabel updateImage() {
+        int missedCount = model.getCountMissedWords();
+        // Kontrollige, et ei ületata maksimaalset piltide arvu
+        if (missedCount <= 11) {
+            String imagePath = model.getImageFiles().get(missedCount);
+            ImageIcon imageIcon = new ImageIcon(imagePath);
+            lblImage.setIcon(imageIcon);
+        }
+        return lblImage;
+    }
+
+    /**
      * Returns the label of the image
      * @return label of the image
      */

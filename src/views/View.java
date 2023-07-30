@@ -269,6 +269,10 @@ public class View extends JFrame {
         getTxtChar().setText("");   // Sisestatud tähe tühjendamine
         getLblError().setText("Valesti 0 täht(e). "); // Muuda vigade teavitus vaikimisi tekstiks
         model.setMissedLetters(new ArrayList<>());
+        //getGameTime();
         getLblError().setForeground(Color.BLACK); // Muuda teksti värv vaikimsii mustaks
     }
+
+    public void imageUpdate(Image iconImage, String s) { return; }
+
 }

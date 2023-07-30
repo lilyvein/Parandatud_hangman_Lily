@@ -48,10 +48,10 @@ public class ButtonSend implements ActionListener {
         boolean correct = true;  // Set correct to true
         for (int i = 0; i < guessList.length; i++){  // Loop through word to guess
             if (guessList[i].equals(enteredChars)){ // If guessed letter is in word to guess
-                model.getWordNewOfLife().setCharAt(i, guessedLetter);  // Set guessed letter
-                //view.getLblGuessWord().setText(model.getWordNewOfLife().toString());
-                view.getLblResult().setText(model.addSpaceBetween(model.getWordNewOfLife().toString()));
-                //System.out.println(model.getWordNewOfLife());
+                model.getHiddenWord().setCharAt(i, guessedLetter);  // Set guessed letter
+                //view.getLblGuessWord().setText(model.getHiddenWord().toString());
+                view.getLblResult().setText(model.addSpaceBetween(model.getHiddenWord().toString()));
+                //System.out.println(model.getHiddenWord());
                 //System.out.println("What index of:  " + i);
 
                 correct = false;
@@ -60,21 +60,26 @@ public class ButtonSend implements ActionListener {
         if (correct){
             model.getMissedLetters().add(enteredChars);  // Add missed letters to list
             view.getLblError().setForeground(Color.RED);  //Valesti pakutud tähed on punased
+            //view.getGameImages("src\\resources\\images\\hangman" + model.getCountMissedWords() + ".png").updateImage(getImage();  // Add images to list
         }
         model.setCountMissedWords(model.getMissedLetters().size());  // Set missed words
         view.getLblError().setText("Valesti: " + model.getCountMissedWords() + " täht(e) " + model.getMissedLetters());  // Set missed words
         view.getTxtChar().setText("");  // Set empty text field
-        if (!model.getWordNewOfLife().toString().contains("_")) {  // If word is guessed
+        if (!model.getHiddenWord().toString().contains("_")) {  // If word is guessed
             model.askPlayerName();  // Ask player name
             model.getPlayerName();  // Get player name
             model.insertScoreToTable();  // Insert score to table
             view.setEndGame();  // Set end game
         }
-        if (!(model.getCountMissedWords() < 11)) {  // If missed words are more than 11
+        if (!(model.getCountMissedWords() < 11)) {   // If missed words are more than 11
             //System.out.println("counter: " + model.getCountMissedWords());
             JOptionPane.showMessageDialog(null, "Kaotasid mängu", "Mäng läbi", JOptionPane.PLAIN_MESSAGE);  // Show message
             view.setEndGame();  // Set end game
         }
+    }
+
+    private int getMissedCount() {
+        return model.getCountMissedWords();
     }
 }
 
