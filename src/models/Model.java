@@ -54,12 +54,7 @@ public class Model {
         dataWords = new ArrayList<>();
         wordNewOfLife = new StringBuilder(); // Initialize wordNewOfLife here
         wordsSelect();
-
-
     }
-
-
-
 
     /**
      * Sets the content to match the ComboBox. Adds "All categories" and unique categories obtained from the database.
@@ -102,7 +97,9 @@ public class Model {
         System.out.println("Test to see is word hidden: " + wordNewOfLife);
     }
 
-
+    /**
+     * The method reads unique category names from the database and writes them to the cmbNames variable of the model.
+     */
 
     public void wordsSelect() {
         String sql = "SELECT * FROM words ORDER BY category, word";
@@ -150,9 +147,9 @@ public class Model {
      * ALl leaderbaord content
      * @return List<DataScores>
      */
-    public List<DataScores> getDataScores() {
-        return dataScores;
-    }
+    public List<DataScores> getDataScores() {return dataScores;}
+
+
 
     /**
      * Sets the new content of the leaderboard
@@ -313,6 +310,7 @@ public class Model {
 
 
     private void selectScores() {return;}
+
 
     public int getCountMissedWords() {
         return countMissedWords;

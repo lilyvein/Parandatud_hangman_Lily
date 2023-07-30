@@ -96,45 +96,6 @@ public class Database {
             throw new RuntimeException(e);
         }
     }
-    public void wordsSelect (){
-        String sql = "SELECT * FROM words ORDER BY category, word";
-        List<String> categories = new ArrayList<>();
-        List<DataWords> dataWords = new ArrayList<>();
-        try {
-            Connection conn = this.dbConnection();
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-            while(rs.next()) {
-                int id = rs.getInt("id");
-                String word = rs.getString("word");
-                String category = rs.getString("category");
-                dataWords.add(new DataWords(id, word, category));
-                categories.add(category);  // add category to array list
-            }
-            // https://howtodoinjava.com/java8/stream-find-remove-duplicates/
-            List<String> unique = categories.stream().distinct().collect(Collectors.toList());
-            model.setDataWords(dataWords);
-            model.setCorrectCmbNames(unique);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-
-    public void checkDatabaseConnection() {
-        try {
-            Connection conn = this.dbConnection();
-            if (conn != null) {
-                System.out.println("Ühendus andmebaasiga on edukas!");
-                conn.close();
-            } else {
-                System.out.println("Andmebaasiga ühenduse loomine ebaõnnestus!");
-            }
-        } catch (SQLException e) {
-            System.out.println("Andmebaasiga ühenduse loomine ebaõnnestus! Viga: " + e.getMessage());
-        }
-    }
 }
 
 
