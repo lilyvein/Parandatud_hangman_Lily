@@ -8,6 +8,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+
 /**
  * A class that creates an image panel and at the same time reads the images in the image folder into an array
  */
@@ -21,6 +22,7 @@ public class GameImages extends JPanel {
      */
     public GameImages(Model model) {
         this.model = model;
+
         this.setBackground(new Color(195, 220, 255)); // Image panel background color
         this.setPreferredSize(new Dimension(130,130)); // Image panel size
         readImagesFolder(); // Reads the image files into an array
@@ -54,14 +56,18 @@ public class GameImages extends JPanel {
      */
     public JLabel updateImage() {
         int missedCount = model.getCountMissedWords();
-        // Kontrollige, et ei ületata maksimaalset piltide arvu
-        if (missedCount <= 11) {
-            String imagePath = model.getImageFiles().get(missedCount);
-            ImageIcon imageIcon = new ImageIcon(imagePath);
-            lblImage.setIcon(imageIcon);
-        }
+        List<String> imageFiles = model.getImageFiles();
+        String imagePath = imageFiles.get(missedCount);
+        ImageIcon imageIcon = new ImageIcon(imagePath);
+        lblImage.setIcon(imageIcon);
         return lblImage;
     }
+    public void updateImage(ImageIcon imageIcon) {
+        lblImage.setIcon(imageIcon);
+    }
+
+
+
 
     /**
      * Returns the label of the image
@@ -70,4 +76,5 @@ public class GameImages extends JPanel {
     public JLabel getLblImage() {
         return lblImage;
     }
+
 }

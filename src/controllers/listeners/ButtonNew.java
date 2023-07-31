@@ -44,7 +44,8 @@ public class ButtonNew implements ActionListener {
         view.setNewImage(0);
         view.getTxtChar().requestFocus(); // After pressing New Game, the input box becomes active
         String selectedCategory = view.getCmbCategory().getSelectedItem().toString();  // Võtab kategooria, mida kasutaja valis
-        model.randomWordsFromCategoriesList(selectedCategory);  // Valib sõna kategooriast
+        model.randomWordsFromCmbNamesList(selectedCategory);  // Valib sõna kategooriast
+        model.setHiddenWord(new StringBuilder(model.getHiddenWord())); // Paneb valitud sõna StringBuilderisse
         String wordOfNew = model.addSpaceBetween(String.valueOf(model.getHiddenWord())); // Lisab sõna vahele tühikud
         view.getLblResult().setText(wordOfNew); // Paneb sõna lblResultisse
 

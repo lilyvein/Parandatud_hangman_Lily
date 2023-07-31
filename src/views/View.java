@@ -1,11 +1,11 @@
 package views;
 
-import controllers.listeners.ButtonSend;
 import helpers.GameTimer;
 import helpers.RealDateTime;
 import models.Model;
 import models.datastructures.DataScores;
 import views.panels.GameBoard;
+import views.panels.GameImages;
 import views.panels.GameResult;
 
 import javax.swing.*;
@@ -27,6 +27,7 @@ public class View extends JFrame {
 
     /**
      * Main window JFrame
+     *
      * @param model The already created model
      */
     public View(Model model) {
@@ -48,22 +49,26 @@ public class View extends JFrame {
         this.setTitle("Hangman 2023"); // Main window title text
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Makes the main window closeable
         this.setLayout(new BorderLayout()); // Sets a new layout for the window
-        this.setMinimumSize(new Dimension(590,250));
+        this.setMinimumSize(new Dimension(590, 250));
+
     }
 
     /**
      * Creates panels and the objects needed for them on the main window
      */
     private void setupPanels() {
-        gameBoard = new GameBoard(model); // Creates a top panel
+        gameBoard = new GameBoard(model, this); // Creates a top panel
         gameResult = new GameResult(); // Creates a bottom panel
 
         this.add(gameBoard, BorderLayout.NORTH); // Places the panel according to BorderLayout
         this.add(gameResult, BorderLayout.CENTER); // Places the panel according to BorderLayout
+        this.getRootPane().setDefaultButton(getBtnSend()); // Enter klahv töötab Saada täht puhul
     }
     // All methods register* in file Controller.java
+
     /**
      * Take the leaderboard button from gameBoard and add an actionListener to the button
+     *
      * @param al actionListener
      */
     public void registerButtonScores(ActionListener al) {
@@ -72,6 +77,7 @@ public class View extends JFrame {
 
     /**
      * Take the New Game button from the game board and add an actionListener to the button
+     *
      * @param al actionListener
      */
     public void registerButtonNew(ActionListener al) {
@@ -80,12 +86,16 @@ public class View extends JFrame {
 
     /**
      * Nupu "Saada täht" funktsionaalsuseks
+     *
      * @param al ActionListener
      */
-    public void registerButtonSend(ActionListener al) {gameBoard.getBtnSend().addActionListener(al);}
+    public void registerButtonSend(ActionListener al) {
+        gameBoard.getBtnSend().addActionListener(al);
+    }
 
     /**
      * Take the game pause button from the game board and add an actionListener to the button
+     *
      * @param al actionListener
      */
     public void registerButtonCancel(ActionListener al) {
@@ -94,6 +104,7 @@ public class View extends JFrame {
 
     /**
      * Take a ComboBox from the game board and add an itemListener
+     *
      * @param il itemListener
      */
     public void registerComboBoxChange(ItemListener il) {
@@ -105,19 +116,20 @@ public class View extends JFrame {
      */
     public void updateScoresTable() {
         model.getDtmScores().setRowCount(0);
-        for(DataScores ds : model.getDataScores()) {
+        for (DataScores ds : model.getDataScores()) {
             String gameTime = ds.gameTime().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss"));
             String name = ds.playerName();
             String word = ds.word();
             String chars = ds.missedLetters();
             int timeSeconds = ds.timeSeconds();
             String humanTime = convertSecToMMSS(timeSeconds);
-            model.getDtmScores().addRow(new Object[] {gameTime, name, word, chars, humanTime});
+            model.getDtmScores().addRow(new Object[]{gameTime, name, word, chars, humanTime});
         }
     }
 
     /**
      * Converts full seconds to minutes and seconds. 100 sec => 01:30 (1 min 30 sec)
+     *
      * @param seconds full seconds
      * @return 00:00 in format
      */
@@ -136,7 +148,7 @@ public class View extends JFrame {
         gameBoard.getBtnSend().setEnabled(false); // Disable Send button
         gameBoard.getBtnCancel().setEnabled(false); // Disable Cancel button
         gameBoard.getTxtChar().setEnabled(false); // Disable Input text field
-        this.setNewImage(model.getImageFiles().size()-1); // Show the last picture from the list of pictures
+        this.setNewImage(model.getImageFiles().size() - 1); // Show the last picture from the list of pictures
     }
 
     /**
@@ -149,8 +161,10 @@ public class View extends JFrame {
         gameBoard.getBtnCancel().setEnabled(true); // Enable Cancel button
         gameBoard.getTxtChar().setEnabled(true); // Enable Input text field
     }
+
     /**
      * Return the time label located on the gameBoard (top panel)
+     *
      * @return label
      */
     public JLabel getLblTime() {
@@ -159,6 +173,7 @@ public class View extends JFrame {
 
     /**
      * Return the guessed word label located in the gameResult panel (bottom panel)
+     *
      * @return label
      */
     public JLabel getLblResult() {
@@ -167,6 +182,7 @@ public class View extends JFrame {
 
     /**
      * Returns the GameBoard panel (top panel)
+     *
      * @return gameBoard
      */
     public GameBoard getGameBoard() {
@@ -175,6 +191,7 @@ public class View extends JFrame {
 
     /**
      * Returns the real time
+     *
      * @return RealDateTime
      */
     public RealDateTime getRealDateTime() {
@@ -183,6 +200,7 @@ public class View extends JFrame {
 
     /**
      * Reaturns the game time
+     *
      * @return GameTimer
      */
     public GameTimer getGameTime() {
@@ -191,6 +209,7 @@ public class View extends JFrame {
 
     /**
      * Set a new image according to the image number
+     *
      * @param id image id (0..11)
      */
     public void setNewImage(int id) {
@@ -200,6 +219,7 @@ public class View extends JFrame {
 
     /**
      * Returns an input box
+     *
      * @return JTextField
      */
     public JTextField getTxtChar() {
@@ -208,19 +228,25 @@ public class View extends JFrame {
 
     /**
      * Tagastab comboboxi
+     *
      * @return JCombobox
      */
-    public JComboBox<String> getCmbCategory() {return gameBoard.getCmbCategory();}
+    public JComboBox<String> getCmbCategory() {
+        return gameBoard.getCmbCategory();
+    }
 
     /**
      * Tagastab uue mängu nupu
+     *
      * @return JButton
      */
     public JButton getBtnNew() {
         return gameBoard.getBtnNew();
     }
+
     /**
      * Tagastab nupu Saada tähte nupu
+     *
      * @return JButton
      */
     public JButton getBtnSend() {
@@ -229,6 +255,7 @@ public class View extends JFrame {
 
     /**
      * Tagastab Cancel nupu
+     *
      * @return JButton
      */
     public JButton getBtnCancel() {
@@ -237,6 +264,7 @@ public class View extends JFrame {
 
     /**
      * Tagsatab lbalei mis sisaldab vigast infot
+     *
      * @return JLabel
      */
     public JLabel getLblError() {
@@ -259,8 +287,10 @@ public class View extends JFrame {
     /**
      * Seadistab mängu LÕPPSEISU nuppude ja tekstiväljadega seoses. See kustuda siis kui mängu lõpp tulemus on teada
      * ja mäng on KINDLASTI lõppenud
+     *
+     * @return
      */
-    public void setEndGame() {
+    public boolean setEndGame() {
         getCmbCategory().setEnabled(true); // Comboboxi saab  valida
         getBtnNew().setEnabled(true); // Saab uut mängu alustada
         getTxtChar().setEnabled(false); // Tähte ei saa sisestada
@@ -271,8 +301,8 @@ public class View extends JFrame {
         model.setMissedLetters(new ArrayList<>());
         //getGameTime();
         getLblError().setForeground(Color.BLACK); // Muuda teksti värv vaikimsii mustaks
+        return false;
     }
-
-    public void imageUpdate(Image iconImage, String s) { return; }
-
 }
+
+

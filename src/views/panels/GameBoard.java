@@ -2,6 +2,7 @@ package views.panels;
 
 import helpers.TextFieldLimit;
 import models.Model;
+import views.View;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -35,7 +36,7 @@ public class GameBoard extends JPanel {
      * Class constructor. Always do this part when creating an object. An object is created only once.
      * @param model A previously made model
      */
-    public GameBoard(Model model) {
+    public GameBoard(Model model, View view) {
         this.model = model; // The GameBoard panel needs access to the model
 
         this.setLayout(new FlowLayout(FlowLayout.LEFT)); // This panel layout

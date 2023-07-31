@@ -6,6 +6,8 @@ import models.datastructures.DataWords;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.io.File;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -57,7 +59,6 @@ public class Model {
         hiddenWord = new StringBuilder(); // Initialize wordNewOfLife here
         wordsSelect();
     }
-
     /**
      * Sets the content to match the ComboBox. Adds "All categories" and unique categories obtained from the database.
      * @param unique all unique categories from database
@@ -71,7 +72,7 @@ public class Model {
             x++;
         }
     }
-    public void randomWordsFromCategoriesList (String selectedCategory){
+    public void randomWordsFromCmbNamesList (String selectedCategory){
         Random random = new Random();
         //System.out.println("For a test to see current category: " + selectedCategory);
         List<String> guessWordsToList = new ArrayList<>();
@@ -79,24 +80,33 @@ public class Model {
             wordToGuess = dataWords.get(random.nextInt(dataWords.size())).getWord();
             //System.out.println("Test for random word: " + wordToGuess.toUpperCase());
         } else {
-            for (DataWords word : dataWords){
+            boolean categoryExists = false;
+            for (DataWords word : dataWords) {
                 if (selectedCategory.equals(word.getCategory())) {
+                    categoryExists = true;
                     guessWordsToList.add(word.getWord());
-
                 }
             }
-            wordToGuess = guessWordsToList.get(random.nextInt(guessWordsToList.size()));
-            System.out.println("Test for random word from current category: " + wordToGuess.toUpperCase());
+
+            if (!categoryExists || guessWordsToList.isEmpty()) {
+                // Valitud kategooriat ei leitud või selles kategoorias pole sõnu, seega valime juhusliku sõna "Kõik kategooriad" hulgast
+                wordToGuess = dataWords.get(random.nextInt(dataWords.size())).getWord();
+            } else {
+                wordToGuess = guessWordsToList.get(random.nextInt(guessWordsToList.size()));
+                System.out.println("Test for random word from current category: " + wordToGuess.toUpperCase());
+            }
         }
+
         this.wordToGuess = wordToGuess.toUpperCase();
         hideLetters();
     }
+
     private void hideLetters() {
         hiddenWord = new StringBuilder();
         for (int i = 0; i < wordToGuess.length(); i++) {
             hiddenWord.append('_');
         }
-        System.out.println("Test to see is word hidden: " + hiddenWord);
+        //System.out.println("Test to see is word hidden: " + hiddenWord);
     }
 
     /**
@@ -320,11 +330,22 @@ public class Model {
 
 
     }
-
+    public void incrementMissedWords() {
+        this.countMissedWords++;
+    }
     public void setCountMissedWords(int countMissedWords) {
         this.countMissedWords = countMissedWords;
     }
 
-    //private char[] getTimeSeconds() {return null;}
+    public void setHiddenWord(StringBuilder hiddenWord) {
+        this.hiddenWord = hiddenWord;
+    }
 
+    public Image getImageFile() {
+        if (imageId < 0 || imageId >= imageFiles.size()) {
+            throw new IllegalArgumentException("Invalid imageId: " + imageId);
+        }
+        String imagePath = imageFiles.get(imageId);
+        return new ImageIcon(imagePath).getImage();
+    }
 }
