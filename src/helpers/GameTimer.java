@@ -45,6 +45,8 @@ public class GameTimer {
      */
     public void startTimer() {
         this.timer.start();
+        //this.running = true;
+        System.out.println("Timer started!");
     }
 
     /**
@@ -52,7 +54,10 @@ public class GameTimer {
      */
     public void stopTimer() {
         this.timer.stop();
+        //this.running = false;
+        System.out.println("Timer stopped! Played time: " + getPlayedTimeInSeconds() + " seconds");
     }
+
 
     /**
      * Is the game running?
@@ -105,5 +110,10 @@ public class GameTimer {
      */
     public int getPlayedTimeInSeconds() {
         return (this.minutes * 60) + seconds;
+
     }
+
+
+
+
 }

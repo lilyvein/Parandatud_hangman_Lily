@@ -42,30 +42,39 @@ public class GameImages extends JPanel {
      */
     private void readImagesFolder() {
         File folder = new File(model.getImagesFolder());
-        File[] files = folder.listFiles(); // The File object has a listFiles method
-        List<String> imageFiles = new ArrayList<>(); // Empty array for image locations
-        for(File file: files) {
-            imageFiles.add(file.getAbsolutePath()); // Each image is added to an array full of a long folder path
+        File[] files = folder.listFiles();
+        List<String> imageFiles = new ArrayList<>();
+        if (files != null) {
+            for (File file : files) {
+                imageFiles.add(file.getAbsolutePath());
+                //System.out.println("Added image: " + file.getAbsolutePath());
+            }
+        } else {
+            //System.out.println("No images found in the folder: " + model.getImagesFolder());
         }
-        model.setImageFiles(imageFiles); // We set up the necessary array in the model
+        model.setImageFiles(imageFiles);
     }
+
 
     /**
      *
      * @return
      */
     public JLabel updateImage() {
-        int missedCount = model.getCountMissedWords();
-        List<String> imageFiles = model.getImageFiles();
-        String imagePath = imageFiles.get(missedCount);
-        ImageIcon imageIcon = new ImageIcon(imagePath);
-        lblImage.setIcon(imageIcon);
-        return lblImage;
+        try {
+            int missedCount = model.getCountMissedWords();
+            List<String> imageFiles = model.getImageFiles();
+            int maxIndex = imageFiles.size() - 1;
+            int imageIndex = Math.min(missedCount, maxIndex);
+            String imagePath = imageFiles.get(imageIndex);
+            ImageIcon imageIcon = new ImageIcon(imagePath);
+            lblImage.setIcon(imageIcon);
+            return lblImage;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return lblImage; // Tagasta ikoon ka siis, kui ilmnes viga
+        }
     }
-    public void updateImage(ImageIcon imageIcon) {
-        lblImage.setIcon(imageIcon);
-    }
-
 
 
 

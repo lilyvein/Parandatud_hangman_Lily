@@ -4,11 +4,8 @@ package models.datastructures;
  * Data structure for database words (table words)
  */
 public record DataWords(int id, String word, String category) {
-/**
+    /**
      * Kontstruktor
-     * @param id
-     * @param word
-     * @param category
      */
     public DataWords(int id, String word, String category) {
         this.id = id;

@@ -20,11 +20,13 @@ public class ButtonCancel implements ActionListener {
      */
     @Override
     public void actionPerformed(ActionEvent e) {
+        view.getLblError().setText(""); // Set lblError text to empty
         view.showNewButton(); // Set access to buttons and text field
 
         view.getGameTime().stopTimer(); // Stop gameTime
         view.getGameTime().setRunning(false); // set game not running
 
         view.getRealDateTime().start(); // Start real time again
+
     }
 }

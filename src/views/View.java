@@ -12,6 +12,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
@@ -25,9 +26,9 @@ public class View extends JFrame {
     private final RealDateTime realDateTime; // Real Date Time
     private final GameTimer gameTime; // Game time
 
+
     /**
      * Main window JFrame
-     *
      * @param model The already created model
      */
     public View(Model model) {
@@ -40,6 +41,7 @@ public class View extends JFrame {
         realDateTime.start(); // Start real time. This not good place for start!
 
         gameTime = new GameTimer(this); // Creates an empty object when creating a frame
+
     }
 
     /**
@@ -64,7 +66,7 @@ public class View extends JFrame {
         this.add(gameResult, BorderLayout.CENTER); // Places the panel according to BorderLayout
         this.getRootPane().setDefaultButton(getBtnSend()); // Enter klahv töötab Saada täht puhul
     }
-    // All methods register* in file Controller.java
+
 
     /**
      * Take the leaderboard button from gameBoard and add an actionListener to the button
@@ -280,8 +282,7 @@ public class View extends JFrame {
         getTxtChar().setEnabled(true); // Tähte saab sisestada
         getBtnSend().setEnabled(true); // Saada täht nuppu saab kasutada
         getBtnCancel().setVisible(true);   // Mängu saab katkestada
-        //getLblWrongInfo().setText("Valesti 0 täht(e). "); // Muuda vigade teavitus vaikimisi tekstiks
-        //getLblWrongInfo().setForeground(Color.RED); // Muuda teksti värv vaikimsii mustaks
+
     }
 
     /**
@@ -299,9 +300,17 @@ public class View extends JFrame {
         getTxtChar().setText("");   // Sisestatud tähe tühjendamine
         getLblError().setText("Valesti 0 täht(e). "); // Muuda vigade teavitus vaikimisi tekstiks
         model.setMissedLetters(new ArrayList<>());
-        //getGameTime();
+
         getLblError().setForeground(Color.BLACK); // Muuda teksti värv vaikimsii mustaks
         return false;
+    }
+
+    /**
+     * Tagastab mängulaual olevad pildid
+     * @return GameImages
+     */
+    public GameImages getGameImages() {
+        return gameBoard.getGameImages();
     }
 }
 

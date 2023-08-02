@@ -11,13 +11,11 @@ import java.time.temporal.Temporal;
  */
 public record DataScores(LocalDateTime gameTime, String playerName, String word, String missedLetters,
                          int timeSeconds) {
+
+
+
     /**
      * Konstruktor
-     * @param gameTime
-     * @param playerName
-     * @param word
-     * @param missedLetters
-     * @param timeSeconds
      */
     public DataScores(LocalDateTime gameTime, String playerName, String word, String missedLetters, int timeSeconds) {
         this.gameTime = gameTime;
@@ -70,5 +68,4 @@ public record DataScores(LocalDateTime gameTime, String playerName, String word,
         Duration duration = Duration.between(startTime, endTime);
         return (int) duration.getSeconds();
     }
-
 }

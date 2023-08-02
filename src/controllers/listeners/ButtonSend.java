@@ -1,112 +1,121 @@
 package controllers.listeners;
 
+import helpers.GameTimer;
 import models.Model;
 import views.View;
-import views.panels.GameImages;
+
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
+
+
+
 
 /**
  * Klass nupu Saada täht jaoks
  */
 public class ButtonSend implements ActionListener {
-    /**
-     * Mudel
-     */
-    private Model model;
-    /**
-     * View
-     */
-    private View view;
 
-    int imageId = 0;
-
-    private List imageFiles;
-    private GameImages gameImages;
+    private final Model model;
+    private final View view;
 
     /**
-     * Konstuktor
-     * @param model Model
-     * @param view View
+     * Konstruktor
      */
+
     public ButtonSend(Model model, View view) {
         this.model = model;
         this.view = view;
-        this.gameImages = new GameImages(this.model);
-
+        //GameTimer gameTime = view.getGameTime();
+        //System.out.println("Constructor gameTime object: " + this.gameTime);
     }
 
     /**
-     * Kui kliikida nupul Saada täht
-     * @param e the event to be processed
+     * Kui nupule Saada täht vajutatakse, siis kontrollitakse, kas sisestatud täht on õige või vale.
+     * Kui täht on õige, siis kuvatakse see sõna juurde. Kui täht on vale, siis kuvatakse see
+     * valesti sisestatud tähtede juurde.
+     * Kui mängija arvab kõik tähed ära, siis kuvatakse teade, et mängija võitis.
+     * Kui mängija arvab 11 korda valesti, siis kuvatakse teade, et mängija kaotas.
      */
+
     @Override
     public void actionPerformed(ActionEvent e) {
+        view.getTxtChar().requestFocus(); // After pressing New Game, the input box becomes active
+        String enteredChar = view.getTxtChar().getText().toUpperCase(); // Võtab sisestatud tähe
+        if (enteredChar.isEmpty()) { // Kui sisestatud täht on tühi, siis ei tee midagi
+            return;
+        }
 
-        view.getTxtChar().requestFocus(); // Peale selle nupu klikkimist anna fookus tekstikastile
+        char guessedLetter = enteredChar.charAt(0); // Võtab sisestatud tähe esimese tähe
+        String guessWord = model.getWordToGuess(); // Võtab sõna, mida mängija peab ära arvama
+        String[] guessList = guessWord.split(""); // Teeb sõnast massiivi
+        System.out.println("GuessList: " + Arrays.toString(guessList));  // Prindib massiivi
 
-        String enteredChars = view.getTxtChar().getText().toUpperCase();  // Get entered chars
-        char guessedLetter = enteredChars.charAt(0);  // Get guessed letter
-        String guessWord = model.getWordToGuess(); // Get word to guess
-        String[] guessList = guessWord.split("");  // Split word to guess
-        System.out.println("GuessList to see whats inside: " + guessWord.toString());
+        checkGuess(guessList, guessedLetter, enteredChar);  //  Kontrollib, kas sisestatud täht on õige või vale
 
+        view.getTxtChar().setText(""); // Tühjendab sisestatud tähe
+        checkGameStatus(); // Kontrollib, kas mängija võitis või kaotas
+    }
 
-        boolean correct = false;  // Set correct to true
-        for (int i = 0; i < guessList.length; i++){  // Loop through word to guess
-            if (guessList[i].equals(enteredChars)){ // If guessed letter is in word to guess
-                model.getHiddenWord().setCharAt(i, guessedLetter);  // Set guessed letter
-                view.getLblResult().setText(model.addSpaceBetween(model.getHiddenWord().toString()));
-                //System.out.println(model.getHiddenWord());
-
-                correct = true;
+    /**
+     * Kontrollib, kas sisestatud täht on õige või vale
+     */
+    public void checkGuess(String[] guessList, char guessedLetter, String enteredChar) { // Kontrollib, kas sisestatud täht on õige või vale
+        boolean correct = false; // Õige täht on valesti
+        for (int i = 0; i < guessList.length; i++) { // Käib läbi massiivi
+            if (guessList[i].equals(enteredChar)) { // Kui sisestatud täht on massiivis, siis
+                model.getHiddenWord().setCharAt(i, guessedLetter); // Paneb sisestatud tähe õigesse kohta
+                view.getLblResult().setText(model.addSpaceBetween(model.getHiddenWord().toString())); // Kuvab sõna koos sisestatud tähega
+                correct = true; // Õige täht on õige
             }
         }
+        handleIncorrectGuess(enteredChar, correct); // Kontrollib, kas sisestatud täht on õige või vale
+        model.setCountMissedWords(model.getMissedLetters().size()); // Paneb valesti arvatud tähtede arvu
+        view.getLblError().setText("Valesti: " + model.getCountMissedWords() + " täht(e) " + model.getMissedLetters()); // Kuvab valesti arvatud tähtede arvu
+        view.getGameImages().updateImage(); // Uuenda pilti
+    }
+
+    /**
+     * Kontrollib, kas sisestatud täht on õige või vale
+     */
+
+    private void handleIncorrectGuess(String enteredChar, boolean correct) { // Kontrollib, kas sisestatud täht on õige või vale
         if (!correct) {
-            model.getMissedLetters().add(enteredChars);  // Add missed letters to list
-            view.getLblError().setForeground(Color.RED);
-
-            // Increase the count of wrong guesses
-            model.setCountMissedWords(model.getCountMissedWords() + 1);
-            if (model.getCountMissedWords() < model.getImageFiles().size()) {
-                ImageIcon imageIcon = new ImageIcon(model.getImageFiles().get(model.getCountMissedWords()));
-                gameImages.getLblImage().setIcon(imageIcon);
-
-            } else {
-                view.setEndGame();
-            }
-        }
-
-
-        model.setCountMissedWords(model.getMissedLetters().size());  // Set missed words
-        view.getLblError().setText("Valesti: " + model.getCountMissedWords() + " täht(e) " + model.getMissedLetters());  // Set missed words
-        view.getTxtChar().setText("");  // Set empty text field
-
-        if (!model.getHiddenWord().toString().contains("_")) {  // If word is guessed
-            model.askPlayerName();  // Ask player name
-            model.getPlayerName();  // Get player name
-            model.insertScoreToTable();  // Insert score to table
-            view.setEndGame();  // Set end game
-        }
-        if (!(model.getCountMissedWords() < 7)) {   // If missed words are more than 11
-            //System.out.println("counter: " + model.getCountMissedWords());
-            JOptionPane.showMessageDialog(null, "Kaotasid mängu", "Mäng läbi", JOptionPane.PLAIN_MESSAGE);  // Show message
-            view.setEndGame();  // Set end game
-        }
-        if (model.getMissedLetters().isEmpty()) {
-            //System.out.println("GuessList to see whats inside: " + Arrays.toString(guessList));  // For testing
-
+            model.getMissedLetters().add(enteredChar); // Lisab valesti arvatud tähe
+            view.getLblError().setForeground(Color.RED); // Kuvab valesti arvatud tähe punasega
+            model.setCountMissedWords(model.getCountMissedWords() + 1);  // Paneb valesti arvatud tähtede arvu
+            view.getGameImages().updateImage(); // Uuenda pilti
+        } else {
+            view.getLblError().setForeground(Color.BLACK);  // Kuvab õigesti arvatud tähe mustaga
         }
     }
 
+    /**
+     * Kontrollib, kas mängija võitis või kaotas
+     */
+    private void checkGameStatus() {
+        if (!model.getHiddenWord().toString().contains("_")) {  // Kui sõnas ei ole enam alakriipse, siis
 
-    private int getMissedCount() {
-        return model.getCountMissedWords();
+            JOptionPane.showMessageDialog(null, "Võitsid mängu", "Mäng läbi", JOptionPane.PLAIN_MESSAGE); // Kuvab teate, et mängija võitis
+            //System.out.println("checkGameStatus gameTime object: " + gameTime);  // Prindib gameTime objekti
+            view.getGameTime().stopTimer();  // Peatab mänguaja
+            int playedTimeInSeconds = view.getGameTime().getPlayedTimeInSeconds();  // Võtab mängitud aja sekundites
+            model.setGametime(playedTimeInSeconds);  // Salvestame mängitud aja siin
+
+            model.askPlayerName(); // Küsib mängija nime
+            model.getPlayerName();  // Võtab mängija nime
+            model.insertScoreToTable();  // Lisab mängija nime ja mängitud aja tabelisse
+
+            view.setEndGame();  // Lõpetab mängu
+            return;
+
+        }
+        if (!(model.getCountMissedWords() < 11)) { //kui valesti arvatud tähtede arv on 11 või rohkem, siis
+            JOptionPane.showMessageDialog(null, "Kaotasid mängu", "Mäng läbi", JOptionPane.PLAIN_MESSAGE); // Kuvab teate, et mängija kaotas
+            view.setEndGame(); // Lõpetab mängu
+        }
     }
 }

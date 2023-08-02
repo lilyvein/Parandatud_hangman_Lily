@@ -1,25 +1,23 @@
 package models;
 
 import models.datastructures.DataScores;
-import models.datastructures.DataWords;
+
 
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 /**
  * A class for interacting with and querying a database.
  */
 public class Database {
-    private Connection connection = null;
-    private final String databaseUrl;
-    private String databaseFile;
-    private final Model model;
-    private List<String> missedLetters = new ArrayList<>();
-    private int timeSeconds;
+    private Connection connection = null; // Database connection
+    private final String databaseUrl; // Database URL
+    private final Model model; // Model
+
 
     /**
      * A database constructor that is always invoked when an object is created.     *
@@ -30,7 +28,6 @@ public class Database {
         this.model = model;
         this.databaseUrl = "jdbc:sqlite:" + model.getDatabaseFile();
         this.selectUniqueCategories(); // ComboBox needs categories from the table
-        this.databaseFile = this.databaseFile;
         this.selectScores(); // Leaderboard needs data from the table
     }
 
