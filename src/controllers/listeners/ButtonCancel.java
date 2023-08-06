@@ -20,7 +20,7 @@ public class ButtonCancel implements ActionListener {
      */
     @Override
     public void actionPerformed(ActionEvent e) {
-        view.getLblError().setText(""); // Set lblError text to empty
+        model.getMissedLetters().clear(); // Clear missed letters
         view.showNewButton(); // Set access to buttons and text field
 
         view.getGameTime().stopTimer(); // Stop gameTime

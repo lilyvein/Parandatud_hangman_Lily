@@ -83,7 +83,11 @@ public class View extends JFrame {
      * @param al actionListener
      */
     public void registerButtonNew(ActionListener al) {
-        gameBoard.getBtnNew().addActionListener(al);
+        gameBoard.getBtnNew().addActionListener(e -> {
+            al.actionPerformed(e);
+            model.setMissedLetters(new ArrayList<>());  // Clear missed letters
+            getLblError().setText("Valesti 0 täht(e). ");
+        });
     }
 
     /**
@@ -101,8 +105,13 @@ public class View extends JFrame {
      * @param al actionListener
      */
     public void registerButtonCancel(ActionListener al) {
-        gameBoard.getBtnCancel().addActionListener(al);
+        gameBoard.getBtnCancel().addActionListener(e -> {
+            al.actionPerformed(e);
+            model.setMissedLetters(new ArrayList<>());  // Clear missed letters
+            getLblError().setText("Valesti 0 täht(e). ");
+        });
     }
+
 
     /**
      * Take a ComboBox from the game board and add an itemListener
