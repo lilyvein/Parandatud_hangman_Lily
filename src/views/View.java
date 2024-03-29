@@ -86,7 +86,7 @@ public class View extends JFrame {
         gameBoard.getBtnNew().addActionListener(e -> {
             al.actionPerformed(e);
             model.setMissedLetters(new ArrayList<>());  // Clear missed letters
-            getLblError().setText("Wrong 0 letter(s)");
+            getLblError().setText("Valesti 0 täht(e). ");
         });
     }
 
@@ -108,7 +108,7 @@ public class View extends JFrame {
         gameBoard.getBtnCancel().addActionListener(e -> {
             al.actionPerformed(e);
             model.setMissedLetters(new ArrayList<>());  // Clear missed letters
-            getLblError().setText("Wrong 0 letter(s)");
+            getLblError().setText("Valesti 0 täht(e). ");
         });
     }
 
@@ -307,7 +307,7 @@ public class View extends JFrame {
         getBtnSend().setEnabled(false); // Saada täht nuppu ei saa kasutada
         getBtnCancel().setVisible(false);  // Mängu ei saa enam katkestada
         getTxtChar().setText("");   // Sisestatud tähe tühjendamine
-        getLblError().setText("Wrong 0 letter(s)"); // Muuda vigade teavitus vaikimisi tekstiks
+        getLblError().setText("Valesti 0 täht(e). "); // Muuda vigade teavitus vaikimisi tekstiks
         model.setMissedLetters(new ArrayList<>());
 
         getLblError().setForeground(Color.BLACK); // Muuda teksti värv vaikimsii mustaks
@@ -321,8 +321,6 @@ public class View extends JFrame {
     public GameImages getGameImages() {
         return gameBoard.getGameImages();
     }
-
-
 }
 
 

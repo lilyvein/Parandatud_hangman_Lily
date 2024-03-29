@@ -3,6 +3,7 @@ package controllers.listeners;
 import models.Model;
 import views.View;
 
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -26,9 +27,8 @@ public class ButtonNew implements ActionListener {
      */
     @Override
     public void actionPerformed(ActionEvent e) {
+        view.setStartGame(); // Set the game to start
         view.hideNewButtons(); // Set access to buttons and text field
-        model.setImageId(0);  // set image id 0
-        ButtonSend.guessedLetters.clear();  //clear the guessed letters list
         view.getRealDateTime().stop(); // "Stop" real time
         if(!view.getGameTime().isRunning()) { // If gameTime not running
             view.getGameTime().setSeconds(0);
@@ -38,13 +38,17 @@ public class ButtonNew implements ActionListener {
         } else { // gameTime is running
             view.getGameTime().stopTimer(); // Stop gameTime
             view.getGameTime().setRunning(false); // set game not running
+            view.getGameTime().getPlayedTimeInSeconds();
+
         }
 
-        view.getTxtChar().requestFocus(); // After pressing New Game, the input box becomes active
         view.setNewImage(0);
-        String selectedCategory = view.getCmbCategory().getSelectedItem().toString();
-        model.generatedWordFromCategoriesList(selectedCategory);
-        String wordOfNew = model.addSpaceBetween(String.valueOf(model.getWordNewOfLife()));
-        view.getLblResult().setText(wordOfNew);
+        view.getTxtChar().requestFocus(); // After pressing New Game, the input box becomes active
+        String selectedCategory = view.getCmbCategory().getSelectedItem().toString();  // Võtab kategooria, mida kasutaja valis
+        model.randomWordsFromCmbNamesList(selectedCategory);  // Valib sõna kategooriast
+        model.setHiddenWord(new StringBuilder(model.getHiddenWord())); // Paneb valitud sõna StringBuilderisse
+        String wordOfNew = model.addSpaceBetween(String.valueOf(model.getHiddenWord())); // Lisab sõna vahele tühikud
+        view.getLblResult().setText(wordOfNew); // Paneb sõna lblResultisse
+
     }
 }

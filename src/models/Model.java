@@ -1,81 +1,85 @@
 package models;
 
+import helpers.GameTimer;
 import models.datastructures.DataScores;
 import models.datastructures.DataWords;
+import views.View;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.View;
-import java.sql.SQLException;
+
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
-
 /**
  * A model where the entire logic of the game must take place
  */
 public class Model {
-    /*
-    hangman_words_ee.db - Estonian words, the leaderboard table is empty
-    hangman_words_en.db - English words, the leaderboard table is empty
-    hangman_words_ee_test.db - Estonian words, the leaderboard table is NOT empty
-     */
-    private final String databaseFile = "hangman_words_ee_test.db"; // Default database
-    private final String imagesFolder = "images"; // Hangman game images location
+
+
+    private final String databaseFile = "hangman_words_ee.db"; // Default database
     private List<String> imageFiles = new ArrayList<>(); // All images with full folder path
     private String[] cmbNames; // ComboBox categories names (contents)
     private final String chooseCategory = "All categories"; // Default first ComboBox choice
     private DefaultTableModel dtmScores; // Leaderboard DefaultTableModel
     private List<DataScores> dataScores = new ArrayList<>(); // The contents of the entire database table scores
-    private List<DataWords> dataWords;
-    private List<String> missedLetters = new ArrayList<>();
     private int imageId = 0; // Current image id (0..11)
     private String selectedCategory = chooseCategory; // Default all categories as "All categories"
-    private String wordToGuess;
-    private StringBuilder wordNewOfLife;
-    private String playerName;
-    public int countMissedWords;
+
+    private List<String> missedLetters = new ArrayList<>(); //
+    public int countMissedWords; // arvatud sõna
+    private String playerName; // mängija nimi
+    private final List<DataWords> dataWords; // sõnad
+    private String[] categories; // kategooriad
+    private String wordToGuess;  // sõna, mida arvata
+    private StringBuilder hiddenWord; // Peidetud random sõna
+    private Connection connection = null;  // andmebaasi ühendus
+
+    private int gametime;
 
     /**
-     * During the creation of the model, the names of the categories to be shown in the combobox are known
+     * Konstruktor
      */
     public Model() {
-        new Database(this);
-        dataWords = new ArrayList<>();
-        fetchWordsFromDatabase(); // Populate the dataWords list with data from the database
+        new Database(this);  // andmebaas
+        dataWords = new ArrayList<>();  // sõnad listis
+        hiddenWord = new StringBuilder();  // peidetud sõna
+        wordsSelect(); // sõnad
+        //this.gameTime = new GameTimer(new View());  // mängu aeg
+
     }
+
+
+    private Connection dbConnection() throws SQLException {
+        if(connection != null) {
+            connection.close();
+        }
+        // andmebaasi url
+        String dbUrl = "jdbc:sqlite:" + databaseFile;
+        connection = DriverManager.getConnection(dbUrl);
+        return connection;
+    }
+
 
     /**
      * Sets the content to match the ComboBox. Adds "All categories" and unique categories obtained from the database.
      * @param unique all unique categories from database
      */
     public void setCorrectCmbNames(List<String> unique) {
-        if (unique == null || unique.isEmpty()) {
-            cmbNames = new String[]{chooseCategory}; // If unique list is empty, create a one-element array with default choice
-        } else {
-            cmbNames = new String[unique.size() + 1];
-            cmbNames[0] = chooseCategory; // First choice before categories
-            int x = 1;
-            for (String category : unique) {
-                cmbNames[x] = category;
-                x++;
-            }
+        cmbNames = new String[unique.size()+1];
+        cmbNames[0] = chooseCategory; // First choice before categories
+        int x = 1;
+        for(String category : unique) {
+            cmbNames[x] = category;
+            x++;
         }
     }
 
-    /**
-     * Fetch words from the database and populate dataWords list
-     */
-    public void fetchWordsFromDatabase() {
-        try {
-            Database database = new Database(this);
-            dataWords = database.getWords(); // Get words from the database and populate the dataWords list
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
     /**
      * All ComboBox contents
      * @return ComboBox contents
@@ -83,19 +87,7 @@ public class Model {
     public String[] getCmbNames() {
         return cmbNames;
     }
-    public StringBuilder getWordNewOfLife() {
-        return wordNewOfLife;
-    }
-    public String getWordToGuess() {
-        return wordToGuess;
-    }
 
-    public int getCountMissedWords() {
-        return countMissedWords;
-    }
-    public void setCountMissedWords(int countMissedWords) {
-        this.countMissedWords = countMissedWords;
-    }
     /**
      * Sets a new DefaultTableModel
      * @param dtmScores DefaultTableModel
@@ -141,6 +133,8 @@ public class Model {
      * @return String
      */
     public String getImagesFolder() {
+        // Hangman game images location
+        String imagesFolder = "images";
         return imagesFolder;
     }
 
@@ -174,6 +168,7 @@ public class Model {
      */
     public void setImageId(int imageId) {
         this.imageId = imageId;
+        hideLetters();   // chati pakutud
     }
 
     /**
@@ -183,12 +178,6 @@ public class Model {
     public String getSelectedCategory() {
         return selectedCategory;
     }
-    public List<String> getMissedLetters(){
-        return missedLetters;
-    }
-    public String getPlayerName() {
-        return playerName;
-    }
 
     /**
      * Sets a new selected category
@@ -197,66 +186,195 @@ public class Model {
     public void setSelectedCategory(String selectedCategory) {
         this.selectedCategory = selectedCategory;
     }
-    public void generatedWordFromCategoriesList(String selectedCategory) {
-        if (dataWords == null || dataWords.isEmpty()) {
-            // Handle the case when dataWords is null or empty
-            // For example, show an error message or choose a default word
-            return;
-        }
+
+    /**
+     * Saame random sõna
+     */
+    public void randomWordsFromCmbNamesList (String selectedCategory){
         Random random = new Random();
         List<String> guessWordsToList = new ArrayList<>();
-        if (selectedCategory.equals("All categories")) {
+        if (selectedCategory.equals("Kõik kategooriad")){
             wordToGuess = dataWords.get(random.nextInt(dataWords.size())).getWord();
         } else {
+            boolean categoryExists = false;
             for (DataWords word : dataWords) {
                 if (selectedCategory.equals(word.getCategory())) {
+                    categoryExists = true;
                     guessWordsToList.add(word.getWord());
                 }
             }
-            if (guessWordsToList.isEmpty()) {
-                // Handle the case when no words match the selected category
-                // For example, show an error message or choose a default word
-                return;
+            if (!categoryExists || guessWordsToList.isEmpty()) {
+                wordToGuess = dataWords.get(random.nextInt(dataWords.size())).getWord();
+            } else {
+                wordToGuess = guessWordsToList.get(random.nextInt(guessWordsToList.size()));
             }
-            wordToGuess = guessWordsToList.get(random.nextInt(guessWordsToList.size()));
         }
         this.wordToGuess = wordToGuess.toUpperCase();
         hideLetters();
-        //System.out.println(wordToGuess);
     }
-    private void hideLetters() {
-        StringBuilder correct = new StringBuilder(wordToGuess);
-        for (int i = 0; i < wordToGuess.length(); i++) {
-            correct.setCharAt(i, '_');
-        }
-        this.wordNewOfLife = correct;
-        //System.out.println("Testsona: " + wordNewOfLife);
 
+    /**
+     * Peidab sõnad
+     */
+    private void hideLetters() {
+        hiddenWord = new StringBuilder();
+        for (int i = 0; i < wordToGuess.length(); i++) {
+            hiddenWord.append('_');
+        }
     }
+
+    /**
+     * SELECT lause tabeli words sisu lugemiseks ja info dataWords listi lisamiseks
+     */
+    public void wordsSelect() {
+        String sql = "SELECT * FROM words ORDER BY category, word";
+        List<String> categories = new ArrayList<>();
+        try {
+            Connection conn = this.dbConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            dataWords.clear();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String word = rs.getString("word");
+                String category = rs.getString("category");
+                dataWords.add(new DataWords(id, word, category));
+                categories.add(category);
+            }
+            List<String> unique = categories.stream().distinct().collect(Collectors.toList());
+            setCorrectCmbNames(unique);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    /**
+     * Tasgastab valesti sisestatud tähed
+     * @return String
+     */
+    public List<String> getMissedLetters(){
+        return missedLetters;
+    }
+
+    /**
+     * Tagastab arvatud sõna
+     */
     public void setMissedLetters(List<String> missedLetters) {
         this.missedLetters = missedLetters;
     }
-    public String addSpaceBetween(String word) {
-        //@TO-DO
-        /**
-         * @ something to try https://stackoverflow.com/questions/41953388/java-split-and-trim-in-one-shot
-         * Don't use trim method not going to work as needed
-         */
-        String[] wordListOfList= word.split("");
-        StringJoiner joiner = new StringJoiner(" ");
-        for (String words : wordListOfList){
-            joiner.add(words);
-        }
-        return joiner.toString();
-    }
+
+    /**
+     * Küsib mängija nime
+     */
     public void askPlayerName() {
         playerName = JOptionPane.showInputDialog("Sisesta oma nimi");
         if (playerName.length() < 2) {
             askPlayerName();
-
         }
     }
 
-}
 
+    /**
+     * Meetod, mis lisab sõna tähtede vahele tühikud.
+     *
+     * @param word Sisendina antud sõna, millele tühikud lisatakse.
+     * @return Muudetud sõna, kus tähtede vahele on lisatud tühikud.
+     */
+    public String addSpaceBetween(String word) {  // Jagame sõna tähtedeks ja paneme need massiivi
+        String[] wordListOfList= word.split("");  // Loome StringJoiner objekti, et ühendada tähti tühikutega
+        StringJoiner joiner = new StringJoiner(" ");  // Kasutame StringJoinerit tähtede ühendamiseks tühikutega
+        for (String words : wordListOfList){ // Siin liigume läbi igat tähte massiivis
+            joiner.add(words);  // Ning lisame iga tähe StringJoinerisse
+        }
+        return joiner.toString(); // Lõpuks tagastame muudetud sõna, kus tähtede vahele on lisatud tühikud
+    }
+
+    /**
+     * Tagastab sõna, mida arvata
+     */
+    public String getWordToGuess() {return wordToGuess;}
+
+
+    /**
+     * Tagastab suvalise valitud sõna selliselt, et keskmised sõnad on peidetud "_" alla.
+     */
+    public StringBuilder getHiddenWord() {
+        return hiddenWord;
+    }
+
+    /**
+     * Tagastab mängija nime
+     */
+    public String getPlayerName() {return playerName;}
+
+    /**
+     * Sisestab mängija andmed edetabelisse
+     */
+    public void insertScoreToTable (){
+
+        String sql = "INSERT INTO scores (playertime, playername, guessword, wrongcharacters, gametime) VALUES (?,?, ?, ?,?)";
+        String removeBrackets = getMissedLetters().toString().replace("[", "").replace("]", "");
+        DataScores endTime = new DataScores(LocalDateTime.now(), getPlayerName(), getWordToGuess(), removeBrackets, getGametime());
+
+        try {
+            Connection conn = this.dbConnection();
+            PreparedStatement preparedStmt = conn.prepareStatement(sql);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String playerTime = endTime.getGameTime().format(formatter);
+            preparedStmt.setString(1, playerTime);
+            preparedStmt.setString(2, endTime.getPlayerName());
+            preparedStmt.setString(3, endTime.getGuessWord());
+            preparedStmt.setString(4, endTime.getMissingLetters());
+            preparedStmt.setInt(5, getGametime());
+
+            preparedStmt.executeUpdate();
+            selectScores();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Tagastab edetabeli
+     */
+    private void selectScores() {}
+
+
+    /**
+     * Tagastab arvatamata sõna
+     */
+    public int getCountMissedWords() {
+        return countMissedWords;
+    }
+
+    /**
+     * Tagastab arvatud sõna
+     */
+    public void setCountMissedWords(int countMissedWords) {
+        this.countMissedWords = countMissedWords;
+    }
+
+    /**
+     * Tagastab arvata sõna
+     */
+    public void setHiddenWord(StringBuilder hiddenWord) {
+        this.hiddenWord = hiddenWord;
+    }
+
+    /**
+     * Saab mängu aja sekundites
+     */
+    public int getGametime() {
+        return gametime;
+    }
+    /**
+     * Määrab mängu aja sekundites
+     */
+
+    public void setGametime(int gametime) {
+        this.gametime = gametime;
+    }
+}
 
