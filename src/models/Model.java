@@ -249,6 +249,8 @@ public class Model {
         }
         return joiner.toString();
     }
+
+
     public void askPlayerName() {
         playerName = JOptionPane.showInputDialog("Sisesta oma nimi");
         if (playerName.length() < 2) {

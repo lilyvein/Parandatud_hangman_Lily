@@ -26,25 +26,23 @@ public class ButtonNew implements ActionListener {
      */
     @Override
     public void actionPerformed(ActionEvent e) {
-        view.hideNewButtons(); // Set access to buttons and text field
-        model.setImageId(0);  // set image id 0
-        ButtonSend.guessedLetters.clear();  //clear the guessed letters list
-        view.getRealDateTime().stop(); // "Stop" real time
-        if(!view.getGameTime().isRunning()) { // If gameTime not running
-            view.getGameTime().setSeconds(0);
-            view.getGameTime().setMinutes(0);
-            view.getGameTime().setRunning(true); // Set game running
-            view.getGameTime().startTimer(); // Start game time
-        } else { // gameTime is running
-            view.getGameTime().stopTimer(); // Stop gameTime
-            view.getGameTime().setRunning(false); // set game not running
-        }
+        view.hideNewButtons(); // Seadistab nupud ja tekstiväljad uue mängu jaoks
+        model.setImageId(0);  // Seadistab pildi ID algväärtusele
+        ButtonSend.guessedLetters.clear();  // Tühjendab arvatud tähtede nimekirja
+        view.getRealDateTime().stop(); // Peatab reaalse aja taimeri
 
-        view.getTxtChar().requestFocus(); // After pressing New Game, the input box becomes active
-        view.setNewImage(0);
+        // Peatab mängu aja taimeri ja lähtestab aja väärtused
+        view.getGameTime().stopTimer();
+        view.getGameTime().setSeconds(0);
+        view.getGameTime().setMinutes(0);
+        view.getGameTime().startTimer(); // Alustab mängu aja taimerit
+        view.getTxtChar().requestFocus(); // Tegevusliini fookus pärast uue mängu nupu vajutamist
+        view.setNewImage(0); // Seadistab uue pildi
         String selectedCategory = view.getCmbCategory().getSelectedItem().toString();
-        model.generatedWordFromCategoriesList(selectedCategory);
+        model.generatedWordFromCategoriesList(selectedCategory); // Genereerib uue sõna valitud kategooria põhjal
         String wordOfNew = model.addSpaceBetween(String.valueOf(model.getWordNewOfLife()));
-        view.getLblResult().setText(wordOfNew);
+        view.getLblResult().setText(wordOfNew); // Uuendab kasutajaliidest uue genereeritud sõnaga
     }
+
+
 }
