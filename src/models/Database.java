@@ -1,23 +1,22 @@
 package models;
-
 import models.datastructures.DataScores;
-
+import models.datastructures.DataWords;
+import views.View;
 
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 /**
  * A class for interacting with and querying a database.
  */
 public class Database {
-    private Connection connection = null; // Database connection
-    private final String databaseUrl; // Database URL
-    private final Model model; // Model
-
+    private Connection connection = null;
+    private final String databaseUrl;
+    private final Model model;
 
     /**
      * A database constructor that is always invoked when an object is created.     *
@@ -27,22 +26,49 @@ public class Database {
     public Database(Model model) {
         this.model = model;
         this.databaseUrl = "jdbc:sqlite:" + model.getDatabaseFile();
-        this.selectUniqueCategories(); // ComboBox needs categories from the table
-        this.selectScores(); // Leaderboard needs data from the table
     }
 
     /**
      * Database connection
+     *
      * @return Connection
      * @throws SQLException throws error on console.
      */
     private Connection dbConnection() throws SQLException {
         // https://stackoverflow.com/questions/13891006/
-        if(connection != null) {
+        if (connection != null) {
             connection.close();
         }
         connection = DriverManager.getConnection(databaseUrl);
         return connection;
+    }
+
+    /**
+     * The method reads unique category names from the database and writes them to the cmbNames variable of the model.
+     */
+    public List<DataWords> getWords() throws SQLException {
+        List<DataWords> dataWords = new ArrayList<>();
+        String sql = "SELECT * FROM words ORDER BY category, word";
+        List<String> categories = new ArrayList<>(); // NB! See on meetodi sisene muutuja categories!
+        try {
+            Connection conn = this.dbConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String word = rs.getString("word");
+                String category = rs.getString("category");
+                dataWords.add(new DataWords(id, word, category)); // Add words to dataWords list
+                categories.add(category);
+            }
+            // https://howtodoinjava.com/java8/stream-find-remove-duplicates/
+            List<String> unique = categories.stream().distinct().collect(Collectors.toList());
+            model.setCorrectCmbNames(unique); // Unikaalsed nimed Listist String[] listi categories
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return dataWords;
     }
 
     /**
@@ -56,7 +82,7 @@ public class Database {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
 
-            while(rs.next()) {
+            while (rs.next()) {
                 String category = rs.getString("category");
                 categories.add(category);
             }
@@ -78,7 +104,7 @@ public class Database {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             model.getDataScores().clear();
-            while(rs.next()) {
+            while (rs.next()) {
                 String datetime = rs.getString("playertime");
                 LocalDateTime playerTime = LocalDateTime.parse(datetime, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                 String playerName = rs.getString("playername");
@@ -88,9 +114,31 @@ public class Database {
                 data.add(new DataScores(playerTime, playerName, guessWord, wrongChar, timeSeconds));
             }
             model.setDataScores(data); // Write dataScore in the model variable
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public void insertScoreToTable(View view){
 
+        String sql = "INSERT INTO scores (playertime, playername, guessword, wrongcharacters, gametime) VALUES (?, ?, ?, ?, ?)";
+        String removeBrackets = model.getMissedLetters().toString().replace("[", "").replace("]", "");
+        DataScores endTime = new DataScores(LocalDateTime.now(), model.getPlayerName(), model.getWordToGuess(), removeBrackets, view.getGameTime().getPlayedTimeInSeconds());
+
+        try (Connection conn = this.dbConnection();
+             PreparedStatement preparedStmt = conn.prepareStatement(sql)) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String playerTime = endTime.gameTime().format(formatter);
+            preparedStmt.setString(1, playerTime);
+            preparedStmt.setString(2, endTime.playerName());
+            preparedStmt.setString(3, endTime.word());
+            preparedStmt.setString(4, endTime.missedLetters());
+            preparedStmt.setInt(5, endTime.timeSeconds());
+            preparedStmt.executeUpdate();
+            selectScores();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 }
+
+

@@ -5,7 +5,6 @@ import controllers.listeners.ButtonNew;
 import controllers.listeners.ButtonScores;
 import controllers.listeners.CategoryItemChange;
 import controllers.listeners.ButtonSend;
-import helpers.GameTimer;
 import models.Model;
 import views.View;
 
